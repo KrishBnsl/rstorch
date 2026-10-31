@@ -113,34 +113,37 @@ fn calculate_strides(shape: &[usize]) -> Vec<usize> {
     strides
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_get_and_set() {
+        let mut tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
+
+        assert_eq!(tensor.get(&[1, 2, 3]).unwrap(), 24.0);
+
+        tensor.set(&[1, 2, 3], 100.0).unwrap();
+
+        assert_eq!(tensor.get(&[1, 2, 3]).unwrap(), 100.0);
+        assert_eq!(tensor.get(&[0, 0, 0]).unwrap(), 1.0);
+    }
+    #[test]
+    fn test_invalid_indices() {
+        let tensor = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
+
+        assert!(matches!(
+            tensor.get(&[2, 0]),
+            Err(TensorError::IndexOutOfBounds)
+        ));
+
+        assert!(matches!(
+            tensor.get(&[0]),
+            Err(TensorError::InvalidIndexCount)
+        ));
+    }
+}
+
 fn main() {
-    // let tensor: Tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
-    // println!("Shape: {:?}", tensor.shape);
-    // println!("Strides: {:?}", tensor.strides);
-    // println!("Data: {:?}", tensor.data);
-    // //    let tensor = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
-    //     println!("{}", tensor.numel());
-    //     println!("{:?}", tensor.shape);
-    //     let mut numbers = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    //
-    //     add_to_slice(&mut numbers[1..4], 10.0);
-    //
-    //     println!("{:?}", numbers);
-    //
-    //     let tensor =
-    //         Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).expect("Invalid Tensor Shape");
-    //     println!("{:?}", tensor);
-    //     println!("{:?}", tensor.data);
-    //     let shape = vec![2, 3, 4, 5];
-    //
-    //     let strides = calculate_strides(&shape);
-    //
-    //     println!("{:?}", strides);
-    //     let tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
-    //
-    //     println!("{:?}", tensor.get(&[1, 2, 3]));
-    //     println!("{:?}", tensor.get(&[0, 1, 2]));
-    //     println!("{:?}", tensor.get(&[1, 3, 2]));
     let mut tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
 
     tensor.set(&[1, 2, 3], 100.0).unwrap();
