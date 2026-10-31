@@ -2,6 +2,8 @@
 enum TensorError {
     InvalidShape { expected: usize, actual: usize },
     ShapeMismatch,
+    InvalidIndexCount,
+    IndexOutOfBounds,
 }
 
 #[derive(Debug)]
@@ -62,7 +64,19 @@ impl Tensor {
         Self::new(data, self.shape.clone())
     }
 
-    fn get(&self, pos: &[i32]) -> Result<f32, TensorError> {}
+    fn get(&self, indices: &[usize]) -> Result<f32, TensorError> {
+        let valid: bool = self.shape.iter().ge(indices.iter());
+        if !valid {
+            return Err(TensorError::IndexOutOfBounds);
+        }
+        let idxfinal: usize = self
+            .shape
+            .iter()
+            .zip(indices.iter())
+            .map(|(x, y)| x * y)
+            .sum();
+        Ok(self.data[idxfinal])
+    }
 }
 
 fn add_to_slice(data: &mut [f32], amount: f32) {
@@ -86,11 +100,11 @@ fn calculate_strides(shape: &[usize]) -> Vec<usize> {
 }
 
 fn main() {
-    let tensor: Tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
-    println!("Shape: {:?}", tensor.shape);
-    println!("Strides: {:?}", tensor.strides);
-    println!("Data: {:?}", tensor.data);
-    //    let tensor = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
+    // let tensor: Tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
+    // println!("Shape: {:?}", tensor.shape);
+    // println!("Strides: {:?}", tensor.strides);
+    // println!("Data: {:?}", tensor.data);
+    // //    let tensor = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
     //     println!("{}", tensor.numel());
     //     println!("{:?}", tensor.shape);
     //     let mut numbers = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -108,4 +122,9 @@ fn main() {
     //     let strides = calculate_strides(&shape);
     //
     //     println!("{:?}", strides);
+    let tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
+
+    println!("{:?}", tensor.get(&[1, 2, 3]));
+    println!("{:?}", tensor.get(&[0, 1, 2]));
+    println!("{:?}", tensor.get(&[1, 3, 2]));
 }
