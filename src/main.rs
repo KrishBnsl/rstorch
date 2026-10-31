@@ -64,18 +64,32 @@ impl Tensor {
         Self::new(data, self.shape.clone())
     }
 
-    fn get(&self, indices: &[usize]) -> Result<f32, TensorError> {
-        let valid: bool = self.shape.iter().ge(indices.iter());
+    fn flat_index(&self, indices: &[usize]) -> Result<usize, TensorError> {
+        if self.shape.len() != indices.len() {
+            return Err(TensorError::InvalidIndexCount);
+        }
+        let valid: bool = self.shape.iter().zip(indices.iter()).all(|(&x, &y)| x > y);
         if !valid {
             return Err(TensorError::IndexOutOfBounds);
         }
         let idxfinal: usize = self
-            .shape
+            .strides
             .iter()
             .zip(indices.iter())
             .map(|(x, y)| x * y)
             .sum();
-        Ok(self.data[idxfinal])
+        Ok(idxfinal)
+    }
+
+    fn get(&self, indices: &[usize]) -> Result<f32, TensorError> {
+        let flatidx: usize = self.flat_index(indices)?;
+        Ok(self.data[flatidx])
+    }
+
+    fn set(&mut self, indices: &[usize], val: f32) -> Result<(), TensorError> {
+        let flatidx: usize = self.flat_index(indices)?;
+        self.data[flatidx] = val;
+        Ok(())
     }
 }
 
@@ -122,9 +136,17 @@ fn main() {
     //     let strides = calculate_strides(&shape);
     //
     //     println!("{:?}", strides);
-    let tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
+    //     let tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
+    //
+    //     println!("{:?}", tensor.get(&[1, 2, 3]));
+    //     println!("{:?}", tensor.get(&[0, 1, 2]));
+    //     println!("{:?}", tensor.get(&[1, 3, 2]));
+    let mut tensor = Tensor::new((1..=24).map(|x| x as f32).collect(), vec![2, 3, 4]).unwrap();
+
+    tensor.set(&[1, 2, 3], 100.0).unwrap();
 
     println!("{:?}", tensor.get(&[1, 2, 3]));
-    println!("{:?}", tensor.get(&[0, 1, 2]));
-    println!("{:?}", tensor.get(&[1, 3, 2]));
+    println!("{:?}", tensor.get(&[0, 0, 0]));
+
+    println!("{:?}", tensor.set(&[2, 0, 0], 50.0));
 }
