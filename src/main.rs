@@ -4,6 +4,7 @@ enum TensorError {
     ShapeMismatch,
     InvalidIndexCount,
     IndexOutOfBounds,
+    InvalidMatrixOperation,
 }
 
 #[derive(Debug)]
@@ -129,6 +130,36 @@ impl Tensor {
             .collect();
         strides.reverse();
         strides
+    }
+
+    fn matmul(&self, other: &Tensor) -> Result<Tensor, TensorError> {
+        if self.data.len() != 2 && other.data.len() != 2 {
+            return Err(TensorError::InvalidMatrixOperation);
+        }
+
+        if (self.shape[1] != other.shape[0]) {
+            return Err(TensorError::InvalidMatrixOperation);
+        }
+
+        let m: usize = self.shape[0];
+        let n: usize = self.shape[1];
+        let p: usize = other.shape[1];
+
+        let mut result = vec![0.0_f32; m * p];
+
+        for i in 0..m {
+            for j in 0..p {
+                let mut sum = 0.0_f32;
+                for k in 0..n {
+                    let a = self.data[i * n + k];
+                    let b = other.data[k * p + j];
+                    sum += a * b;
+                }
+
+                result[i * p + j] = sum;
+            }
+        }
+        Tensor::new(result, vec![m, p])
     }
 }
 
