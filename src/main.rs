@@ -22,7 +22,7 @@ impl Tensor {
                 actual: (data.len()),
             });
         }
-        let strides: Vec<usize> = calculate_strides(&shape);
+        let strides: Vec<usize> = Self::calculate_strides(&shape);
         Ok(Self {
             data,
             shape,
@@ -91,26 +91,51 @@ impl Tensor {
         self.data[flatidx] = val;
         Ok(())
     }
+
+    fn full(shape: &[usize], val: f32) -> Result<Tensor, TensorError> {
+        let data: Vec<f32> = vec![val; shape.iter().product()];
+        match Tensor::new(data, shape.to_vec()) {
+            Ok(tensor) => Ok(tensor),
+            Err(err) => Err(err),
+        }
+    }
+
+    fn zeros(shape: &[usize]) -> Result<Self, TensorError> {
+        Self::full(shape, 0.0)
+    }
+
+    fn ones(shape: &[usize]) -> Result<Self, TensorError> {
+        Self::full(shape, 1.0)
+    }
+
+    fn reshape(&mut self, new_shape: &[usize]) -> Result<(), TensorError> {
+        if new_shape.iter().product::<usize>() != self.shape.iter().product::<usize>() {
+            return Err(TensorError::ShapeMismatch);
+        }
+        let new_stride_vector: Vec<usize> = Self::calculate_strides(new_shape);
+        self.shape = new_shape.to_vec();
+        self.strides = new_stride_vector;
+        Ok(())
+    }
+    fn calculate_strides(shape: &[usize]) -> Vec<usize> {
+        let mut strides: Vec<usize> = shape
+            .iter()
+            .rev()
+            .scan(1usize, |stride, &i| {
+                let current_stride = *stride;
+                *stride *= i;
+                Some(current_stride)
+            })
+            .collect();
+        strides.reverse();
+        strides
+    }
 }
 
 fn add_to_slice(data: &mut [f32], amount: f32) {
     for value in data {
         *value += amount;
     }
-}
-
-fn calculate_strides(shape: &[usize]) -> Vec<usize> {
-    let mut strides: Vec<usize> = shape
-        .iter()
-        .rev()
-        .scan(1usize, |stride, &i| {
-            let current_stride = *stride;
-            *stride *= i;
-            Some(current_stride)
-        })
-        .collect();
-    strides.reverse();
-    strides
 }
 
 #[cfg(test)]
@@ -140,6 +165,16 @@ mod tests {
             tensor.get(&[0]),
             Err(TensorError::InvalidIndexCount)
         ));
+    }
+    #[test]
+    fn test_failed_reshape_preserves_tensor() {
+        let mut tensor = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        tensor.reshape(&[3, 2]).unwrap();
+        let result = tensor.reshape(&[2, 2]);
+        assert!(result.is_err());
+        assert_eq!(tensor.shape, vec![3, 2]);
+        assert_eq!(tensor.strides, vec![2, 1]);
+        assert_eq!(tensor.data.len(), 6);
     }
 }
 
