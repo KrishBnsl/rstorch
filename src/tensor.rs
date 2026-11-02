@@ -1,4 +1,4 @@
-use crate::error::TensorError;
+use crate::{error::TensorError, tensor};
 
 #[derive(Debug, PartialEq)]
 pub struct Tensor {
@@ -55,19 +55,6 @@ impl Tensor {
             *value *= scalar;
         }
         self
-    }
-
-    pub fn add(&self, other: &Tensor) -> Result<Tensor, TensorError> {
-        if self.shape != other.shape {
-            return Err(TensorError::ShapeMismatch);
-        }
-        let data: Vec<f32> = self
-            .data
-            .iter()
-            .zip(other.data.iter())
-            .map(|(x, y)| x + y)
-            .collect();
-        Self::new(data, self.shape.clone())
     }
 
     fn flat_index(&self, indices: &[usize]) -> Result<usize, TensorError> {
@@ -167,7 +154,10 @@ impl Tensor {
         Tensor::new(result, vec![m, p])
     }
 
-    pub fn sub(&self, other: &Tensor) -> Result<Tensor, TensorError> {
+    fn elementwise_operation<F>(&self, other: &Tensor, operation: F) -> Result<Self, TensorError>
+    where
+        F: Fn(f32, f32) -> f32,
+    {
         if self.shape != other.shape {
             return Err(TensorError::ShapeMismatch);
         }
@@ -175,22 +165,21 @@ impl Tensor {
             .data
             .iter()
             .zip(other.data.iter())
-            .map(|(x, y)| x - y)
+            .map(|(x, y)| operation(*x, *y))
             .collect();
         Self::new(data, self.shape.clone())
     }
 
+    pub fn add(&self, other: &Tensor) -> Result<Tensor, TensorError> {
+        self.elementwise_operation(other, |x, y| x + y)
+    }
+
+    pub fn sub(&self, other: &Tensor) -> Result<Tensor, TensorError> {
+        self.elementwise_operation(other, |x, y| x - y)
+    }
+
     pub fn mul(&self, other: &Tensor) -> Result<Tensor, TensorError> {
-        if self.shape != other.shape {
-            return Err(TensorError::ShapeMismatch);
-        }
-        let data: Vec<f32> = self
-            .data
-            .iter()
-            .zip(other.data.iter())
-            .map(|(x, y)| x * y)
-            .collect();
-        Self::new(data, self.shape.clone())
+        self.elementwise_operation(other, |x, y| x * y)
     }
 }
 
