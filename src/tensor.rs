@@ -1,4 +1,11 @@
-use crate::{error::TensorError, tensor};
+#[derive(Debug)]
+pub enum TensorError {
+    InvalidShape { expected: usize, actual: usize },
+    ShapeMismatch,
+    InvalidIndexCount,
+    IndexOutOfBounds,
+    InvalidMatrixOperation,
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Tensor {
@@ -129,7 +136,7 @@ impl Tensor {
             return Err(TensorError::InvalidMatrixOperation);
         }
 
-        if (self.shape[1] != other.shape[0]) {
+        if self.shape[1] != other.shape[0] {
             return Err(TensorError::InvalidMatrixOperation);
         }
 
