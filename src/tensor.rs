@@ -1,6 +1,6 @@
 use crate::error::TensorError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Tensor {
     data: Vec<f32>,
     shape: Vec<usize>,
@@ -166,6 +166,32 @@ impl Tensor {
         }
         Tensor::new(result, vec![m, p])
     }
+
+    pub fn sub(&self, other: &Tensor) -> Result<Tensor, TensorError> {
+        if self.shape != other.shape {
+            return Err(TensorError::ShapeMismatch);
+        }
+        let data: Vec<f32> = self
+            .data
+            .iter()
+            .zip(other.data.iter())
+            .map(|(x, y)| x - y)
+            .collect();
+        Self::new(data, self.shape.clone())
+    }
+
+    pub fn mul(&self, other: &Tensor) -> Result<Tensor, TensorError> {
+        if self.shape != other.shape {
+            return Err(TensorError::ShapeMismatch);
+        }
+        let data: Vec<f32> = self
+            .data
+            .iter()
+            .zip(other.data.iter())
+            .map(|(x, y)| x * y)
+            .collect();
+        Self::new(data, self.shape.clone())
+    }
 }
 
 fn add_to_slice(data: &mut [f32], amount: f32) {
@@ -259,5 +285,25 @@ mod tests {
         assert_eq!(a.shape(), &[2, 3, 4]);
         assert_eq!(a.strides(), &[12, 4, 1]);
         assert_eq!(a.data().len(), 24);
+    }
+
+    #[test]
+    fn test_mul_sub_operations() {
+        let a = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![2, 3]).unwrap();
+
+        let c: Tensor = Tensor::new(vec![-6.0; 6], vec![2, 3]).unwrap();
+        let d: Tensor = Tensor::new(vec![7.0, 16.0, 27.0, 40.0, 55.0, 72.0], vec![2, 3]).unwrap();
+        assert_eq!(a.sub(&b).unwrap(), c);
+        assert_eq!(a.mul(&b).unwrap(), d);
+    }
+
+    #[test]
+    fn test_mul_sub_failing_operations() {
+        let a = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![3, 2]).unwrap();
+
+        let c: Tensor = Tensor::new(vec![-6.0; 6], vec![2, 3]).unwrap();
+        assert!(matches!(a.sub(&b), Err(TensorError::ShapeMismatch)));
     }
 }
