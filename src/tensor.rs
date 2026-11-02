@@ -24,6 +24,18 @@ impl Tensor {
         })
     }
 
+    pub fn data(&self) -> &[f32] {
+        &self.data
+    }
+
+    pub fn shape(&self) -> &[usize] {
+        &self.shape
+    }
+
+    pub fn strides(&self) -> &[usize] {
+        &self.strides
+    }
+
     pub fn numel(&self) -> usize {
         self.data.len()
     }
@@ -230,5 +242,22 @@ mod tests {
             a.matmul(&b),
             Err(TensorError::InvalidMatrixOperation)
         ));
+    }
+
+    #[test]
+    fn test_get_functions_on_priv_variables_of_a_tensor() {
+        let a = Tensor::ones(&[4, 5]).unwrap();
+        assert_eq!(a.shape(), &[4, 5]);
+        assert_eq!(a.strides(), &[5, 1]);
+        assert_eq!(a.data(), &[1.0; 20]);
+    }
+
+    #[test]
+    fn test_tensor_metadata() {
+        let a = Tensor::zeros(&[2, 3, 4]).unwrap();
+
+        assert_eq!(a.shape(), &[2, 3, 4]);
+        assert_eq!(a.strides(), &[12, 4, 1]);
+        assert_eq!(a.data().len(), 24);
     }
 }
