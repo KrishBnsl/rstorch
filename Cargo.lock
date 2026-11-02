@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "minitorch-prep"
+name = "rstorch"
 version = "0.1.0"
