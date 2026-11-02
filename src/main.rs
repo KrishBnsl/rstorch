@@ -133,7 +133,7 @@ impl Tensor {
     }
 
     fn matmul(&self, other: &Tensor) -> Result<Tensor, TensorError> {
-        if self.data.len() != 2 && other.data.len() != 2 {
+        if self.shape.len() != 2 || other.shape.len() != 2 {
             return Err(TensorError::InvalidMatrixOperation);
         }
 
@@ -206,6 +206,37 @@ mod tests {
         assert_eq!(tensor.shape, vec![3, 2]);
         assert_eq!(tensor.strides, vec![2, 1]);
         assert_eq!(tensor.data.len(), 6);
+    }
+
+    #[test]
+    fn test_matmul_correctness() {
+        let a = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![3, 2]).unwrap();
+        let c = a.matmul(&b).unwrap();
+        assert_eq!(c.shape, vec![2, 2]);
+        assert_eq!(c.strides, vec![2, 1]);
+        assert_eq!(c.data, vec![58.0, 64.0, 139.0, 154.0]);
+    }
+    #[test]
+    fn test_matmul_invalid_dimensions() {
+        let a = Tensor::ones(&[2, 3]).unwrap();
+        let b = Tensor::ones(&[3]).unwrap();
+
+        assert!(matches!(
+            a.matmul(&b),
+            Err(TensorError::InvalidMatrixOperation)
+        ));
+    }
+
+    #[test]
+    fn test_matmul_inner_dimension_mismatch() {
+        let a = Tensor::ones(&[2, 3]).unwrap();
+        let b = Tensor::ones(&[4, 2]).unwrap();
+
+        assert!(matches!(
+            a.matmul(&b),
+            Err(TensorError::InvalidMatrixOperation)
+        ));
     }
 }
 
