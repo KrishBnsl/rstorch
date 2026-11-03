@@ -1,4 +1,6 @@
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
+
+use crate::tensor;
 
 #[derive(Debug)]
 pub enum TensorError {
@@ -190,6 +192,10 @@ impl Tensor {
     pub fn mul(&self, other: &Tensor) -> Result<Tensor, TensorError> {
         self.elementwise_operation(other, |x, y| x * y)
     }
+
+    pub fn div(&self, other: &Tensor) -> Result<Tensor, TensorError> {
+        self.elementwise_operation(other, |x, y| x / y)
+    }
 }
 
 fn add_to_slice(data: &mut [f32], amount: f32) {
@@ -216,6 +222,13 @@ impl Mul<&Tensor> for &Tensor {
     type Output = Result<Tensor, TensorError>;
     fn mul(self, rhs: &Tensor) -> Self::Output {
         Tensor::mul(self, rhs)
+    }
+}
+
+impl Div<&Tensor> for &Tensor {
+    type Output = Result<Tensor, TensorError>;
+    fn div(self, rhs: &Tensor) -> Self::Output {
+        Tensor::div(&self, rhs)
     }
 }
 
