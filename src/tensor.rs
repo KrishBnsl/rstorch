@@ -354,7 +354,7 @@ mod tests {
     #[test]
     fn test_div_operations_overloaded() {
         let a = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
-        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![3, 2]).unwrap();
+        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![2, 3]).unwrap();
         let c: Tensor = Tensor::new(
             vec![
                 1.0 / 7.0,
