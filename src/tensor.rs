@@ -234,6 +234,8 @@ impl Div<&Tensor> for &Tensor {
 
 #[cfg(test)]
 mod tests {
+    use std::f32::NAN;
+
     use super::*;
     #[test]
     fn test_get_and_set() {
@@ -357,5 +359,50 @@ mod tests {
 
         let c: Tensor = Tensor::new(vec![-6.0; 6], vec![2, 3]).unwrap();
         assert!(matches!((&a - &b), Err(TensorError::ShapeMismatch)));
+    }
+
+    #[test]
+    fn test_div_operations_overloaded() {
+        let a = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![3, 2]).unwrap();
+        let c: Tensor = Tensor::new(
+            vec![
+                1.0 / 7.0,
+                2.0 / 8.0,
+                3.0 / 9.0,
+                4.0 / 10.0,
+                5.0 / 11.0,
+                6.0 / 12.0,
+            ],
+            vec![2, 3],
+        )
+        .unwrap();
+        assert_eq!((&a / &b).unwrap(), c);
+    }
+
+    #[test]
+    fn test_div_operations_overloaded_failing() {
+        let a = Tensor::new(vec![0.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+
+        let b = Tensor::new(vec![0.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![3, 2]).unwrap();
+
+        assert!(matches!(&a / &b, Err(TensorError::ShapeMismatch)));
+    }
+
+    #[test]
+    fn test_division_by_zero() {
+        let a = Tensor::new(vec![0.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+
+        let b = Tensor::new(vec![0.0, 0.0, 9.0, 10.0, 11.0, 12.0], vec![2, 3]).unwrap();
+
+        let result = (&a / &b).unwrap();
+
+        assert!(result.data()[0].is_nan());
+        assert!(result.data()[1].is_infinite());
+
+        assert_eq!(result.data()[2], 3.0 / 9.0);
+        assert_eq!(result.data()[3], 4.0 / 10.0);
+        assert_eq!(result.data()[4], 5.0 / 11.0);
+        assert_eq!(result.data()[5], 6.0 / 12.0);
     }
 }
