@@ -56,15 +56,11 @@ impl Tensor {
     }
 
     pub fn multiply_scalar(&mut self, scalar: f32) {
-        for i in 0..self.data.len() {
-            self.data[i] *= scalar;
-        }
+        self.data.iter_mut().for_each(|x| *x *= scalar);
     }
 
     pub fn scaled(mut self, scalar: f32) -> Self {
-        for value in &mut self.data {
-            *value *= scalar;
-        }
+        self.multiply_scalar(scalar);
         self
     }
 
@@ -199,9 +195,7 @@ impl Tensor {
 }
 
 fn add_to_slice(data: &mut [f32], amount: f32) {
-    for value in data {
-        *value += amount;
-    }
+    data.iter_mut().for_each(|x| *x += amount);
 }
 
 impl Add<&Tensor> for &Tensor {
