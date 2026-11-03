@@ -1,3 +1,5 @@
+use std::ops::{Add, Mul, Sub};
+
 #[derive(Debug)]
 pub enum TensorError {
     InvalidShape { expected: usize, actual: usize },
@@ -196,6 +198,27 @@ fn add_to_slice(data: &mut [f32], amount: f32) {
     }
 }
 
+impl Add<&Tensor> for &Tensor {
+    type Output = Result<Tensor, TensorError>;
+    fn add(self, rhs: &Tensor) -> Self::Output {
+        Tensor::add(self, rhs)
+    }
+}
+
+impl Sub<&Tensor> for &Tensor {
+    type Output = Result<Tensor, TensorError>;
+    fn sub(self, rhs: &Tensor) -> Self::Output {
+        Tensor::sub(self, rhs)
+    }
+}
+
+impl Mul<&Tensor> for &Tensor {
+    type Output = Result<Tensor, TensorError>;
+    fn mul(self, rhs: &Tensor) -> Self::Output {
+        Tensor::mul(self, rhs)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -301,5 +324,25 @@ mod tests {
 
         let c: Tensor = Tensor::new(vec![-6.0; 6], vec![2, 3]).unwrap();
         assert!(matches!(a.sub(&b), Err(TensorError::ShapeMismatch)));
+    }
+
+    #[test]
+    fn test_operator_overloading_tensor_operations() {
+        let a = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![2, 3]).unwrap();
+
+        let c: Tensor = Tensor::new(vec![-6.0; 6], vec![2, 3]).unwrap();
+        let d: Tensor = Tensor::new(vec![7.0, 16.0, 27.0, 40.0, 55.0, 72.0], vec![2, 3]).unwrap();
+        assert_eq!((&a - &b).unwrap(), c);
+        assert_eq!((&a * &b).unwrap(), d);
+    }
+
+    #[test]
+    fn test_mul_sub_failing_operations_operator_overloading() {
+        let a = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        let b = Tensor::new(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0], vec![3, 2]).unwrap();
+
+        let c: Tensor = Tensor::new(vec![-6.0; 6], vec![2, 3]).unwrap();
+        assert!(matches!((&a - &b), Err(TensorError::ShapeMismatch)));
     }
 }
