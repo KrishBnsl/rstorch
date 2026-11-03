@@ -55,12 +55,8 @@ impl Tensor {
         self.data.iter().sum()
     }
 
-    pub fn multiply_scalar(&mut self, scalar: f32) {
-        self.data.iter_mut().for_each(|x| *x *= scalar);
-    }
-
     pub fn scaled(mut self, scalar: f32) -> Self {
-        self.multiply_scalar(scalar);
+        self.data.iter_mut().for_each(|x| *x *= scalar);
         self
     }
 
